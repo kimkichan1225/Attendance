@@ -8,7 +8,7 @@ import AttendanceRecords from '../components/admin/AttendanceRecords'
 function AdminPage() {
   const toast = useToast()
   const { user, username, loading, signUp, signIn, signOut } = useAuth()
-  const [activeTab, setActiveTab] = useState('qrcode')
+  const [activeTab, setActiveTab] = useState('attendance')
   const [authMode, setAuthMode] = useState('login') // 'login' or 'signup'
   const [userId, setUserId] = useState('')
   const [password, setPassword] = useState('')
@@ -237,16 +237,6 @@ function AdminPage() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex space-x-8">
             <button
-              onClick={() => setActiveTab('qrcode')}
-              className={`py-4 px-2 border-b-2 font-medium text-sm ${
-                activeTab === 'qrcode'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              QR 코드
-            </button>
-            <button
               onClick={() => setActiveTab('attendance')}
               className={`py-4 px-2 border-b-2 font-medium text-sm ${
                 activeTab === 'attendance'
@@ -265,6 +255,16 @@ function AdminPage() {
               }`}
             >
               회원 관리
+            </button>
+            <button
+              onClick={() => setActiveTab('qrcode')}
+              className={`py-4 px-2 border-b-2 font-medium text-sm ${
+                activeTab === 'qrcode'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              QR 코드
             </button>
           </div>
         </div>

@@ -9,6 +9,9 @@ function QRCodeManagement({ userId }) {
   const navigate = useNavigate()
   const [event, setEvent] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     loadEvent()
@@ -70,6 +73,37 @@ function QRCodeManagement({ userId }) {
       toast.success(event.is_active ? '모임이 비활성화되었습니다.' : '모임이 활성화되었습니다.')
     } catch (error) {
       toast.error('상태 변경 실패: ' + error.message)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== event.name) {
+      toast.warning('모임 이름을 정확히 입력해주세요.')
+      return
+    }
+
+    setDeleting(true)
+
+    try {
+      // 1. 이벤트 삭제 (cascade로 users, attendances도 삭제됨)
+      const { error: eventError } = await supabase
+        .from('events')
+        .delete()
+        .eq('id', event.id)
+
+      if (eventError) throw eventError
+
+      toast.success('모임이 삭제되었습니다.')
+
+      // 2. 로그아웃
+      await supabase.auth.signOut()
+
+      // 3. 홈으로 이동
+      navigate('/')
+    } catch (error) {
+      console.error('삭제 실패:', error)
+      toast.error(`삭제 실패: ${error.message}`)
+      setDeleting(false)
     }
   }
 
@@ -198,7 +232,84 @@ function QRCodeManagement({ userId }) {
             </div>
           </div>
         </div>
+
+        {/* 위험 구역 - 계정 삭제 */}
+        <div className="border-t pt-6">
+          <div className="bg-red-50 rounded-lg p-4 border border-red-200">
+            <h3 className="text-lg font-semibold text-red-900 mb-2">⚠️ 위험 구역</h3>
+            <p className="text-sm text-red-800 mb-4">
+              관리자 계정과 모임을 삭제하면 모든 회원 정보와 출석 기록이 영구적으로 삭제됩니다.
+              이 작업은 되돌릴 수 없습니다.
+            </p>
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              className="w-full px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium text-sm md:text-base"
+            >
+              🗑️ 관리자 탈퇴 및 모임 삭제
+            </button>
+          </div>
+        </div>
       </div>
+
+      {/* 삭제 확인 모달 */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="p-6">
+              <h3 className="text-xl font-bold text-red-900 mb-4">
+                정말로 삭제하시겠습니까?
+              </h3>
+              <div className="space-y-4">
+                <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                  <p className="text-sm text-red-800 mb-2">
+                    <strong>다음 데이터가 영구적으로 삭제됩니다:</strong>
+                  </p>
+                  <ul className="text-sm text-red-800 list-disc list-inside space-y-1">
+                    <li>모임 정보</li>
+                    <li>모든 회원 정보</li>
+                    <li>모든 출석 기록</li>
+                    <li>QR 코드 데이터</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <p className="text-sm text-gray-700 mb-2">
+                    삭제를 확인하려면 모임 이름 <strong className="text-red-600">"{event.name}"</strong>을(를) 입력하세요:
+                  </p>
+                  <input
+                    type="text"
+                    value={deleteConfirmText}
+                    onChange={(e) => setDeleteConfirmText(e.target.value)}
+                    placeholder="모임 이름 입력"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                    disabled={deleting}
+                  />
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <button
+                    onClick={() => {
+                      setShowDeleteModal(false)
+                      setDeleteConfirmText('')
+                    }}
+                    disabled={deleting}
+                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  >
+                    취소
+                  </button>
+                  <button
+                    onClick={handleDeleteAccount}
+                    disabled={deleting || deleteConfirmText !== event.name}
+                    className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  >
+                    {deleting ? '삭제 중...' : '영구 삭제'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
