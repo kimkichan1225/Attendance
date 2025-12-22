@@ -85,54 +85,21 @@ function QRCodeManagement({ userId }) {
     setDeleting(true)
 
     try {
-      console.log('삭제 시작:', event.id, event.name)
+      console.log('관리자 계정 완전 삭제 시작:', event.id, event.name)
 
-      // 1. 관련 출석 기록 먼저 삭제
-      const { error: attendanceError } = await supabase
-        .from('attendances')
-        .delete()
-        .eq('event_id', event.id)
+      // 데이터베이스 함수를 호출하여 이벤트 + 인증 계정 모두 삭제
+      const { error: deleteError } = await supabase.rpc('delete_admin_account')
 
-      if (attendanceError) {
-        console.error('출석 기록 삭제 실패:', attendanceError)
-        throw new Error(`출석 기록 삭제 실패: ${attendanceError.message}`)
+      if (deleteError) {
+        console.error('삭제 실패:', deleteError)
+        throw new Error(`삭제 실패: ${deleteError.message}`)
       }
 
-      console.log('출석 기록 삭제 완료')
+      console.log('관리자 계정 완전 삭제 완료')
 
-      // 2. 회원 삭제
-      const { error: usersError } = await supabase
-        .from('users')
-        .delete()
-        .eq('event_id', event.id)
+      toast.success('관리자 계정과 모임이 완전히 삭제되었습니다.')
 
-      if (usersError) {
-        console.error('회원 삭제 실패:', usersError)
-        throw new Error(`회원 삭제 실패: ${usersError.message}`)
-      }
-
-      console.log('회원 삭제 완료')
-
-      // 3. 이벤트 삭제
-      const { error: eventError } = await supabase
-        .from('events')
-        .delete()
-        .eq('id', event.id)
-        .eq('admin_user_id', userId)
-
-      if (eventError) {
-        console.error('이벤트 삭제 실패:', eventError)
-        throw new Error(`이벤트 삭제 실패: ${eventError.message}`)
-      }
-
-      console.log('이벤트 삭제 완료')
-
-      toast.success('모임이 삭제되었습니다.')
-
-      // 4. 로그아웃
-      await supabase.auth.signOut({ scope: 'local' })
-
-      // 5. 로컬 스토리지 정리
+      // 로컬 스토리지 정리
       const keys = Object.keys(localStorage)
       keys.forEach(key => {
         if (key.startsWith('sb-') || key.includes('supabase')) {
@@ -140,7 +107,7 @@ function QRCodeManagement({ userId }) {
         }
       })
 
-      // 6. 홈으로 이동
+      // 홈으로 이동 (인증 계정이 삭제되어 자동 로그아웃됨)
       setTimeout(() => {
         window.location.href = '/'
       }, 500)
