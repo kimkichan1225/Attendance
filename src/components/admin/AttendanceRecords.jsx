@@ -7,7 +7,8 @@ import * as XLSX from 'xlsx'
 
 function AttendanceRecords({ userId }) {
   const toast = useToast()
-  const { users } = useUsers()
+  const [event, setEvent] = useState(null)
+  const { users, refresh: refreshUsers } = useUsers(event?.id)
   const {
     attendances,
     fetchAttendancesByEvent,
@@ -16,7 +17,6 @@ function AttendanceRecords({ userId }) {
     deleteAttendance
   } = useAttendances()
 
-  const [event, setEvent] = useState(null)
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
   const [absentUsers, setAbsentUsers] = useState([])
   const [selectedUserIds, setSelectedUserIds] = useState([])
@@ -34,6 +34,42 @@ function AttendanceRecords({ userId }) {
       loadAbsentUsers()
     }
   }, [event, selectedDate])
+
+  // 실시간 업데이트 구독
+  useEffect(() => {
+    if (!event) return
+
+    // users 테이블 변경 감지
+    const usersSubscription = supabase
+      .channel('users-changes')
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'users', filter: `event_id=eq.${event.id}` },
+        () => {
+          console.log('회원 데이터 변경 감지')
+          refreshUsers()
+          loadAbsentUsers()
+        }
+      )
+      .subscribe()
+
+    // attendances 테이블 변경 감지
+    const attendancesSubscription = supabase
+      .channel('attendances-changes')
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'attendances', filter: `event_id=eq.${event.id}` },
+        () => {
+          console.log('출석 데이터 변경 감지')
+          loadAttendances()
+          loadAbsentUsers()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      usersSubscription.unsubscribe()
+      attendancesSubscription.unsubscribe()
+    }
+  }, [event])
 
   const loadEvent = async () => {
     try {
