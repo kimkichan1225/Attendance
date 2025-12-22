@@ -91,20 +91,29 @@ export function useAuth() {
   // 로그아웃
   const signOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut()
-
-      // 403 에러는 무시 (Supabase 설정 문제일 수 있음)
-      // 로컬 세션은 어차피 지워지므로 성공으로 처리
-      if (error && error.status !== 403) {
-        console.warn('로그아웃 에러 (무시됨):', error)
-      }
-
-      return { success: true }
+      // Supabase 로그아웃 시도
+      await supabase.auth.signOut({ scope: 'local' })
     } catch (error) {
-      // 에러가 발생해도 로컬 세션은 지워지므로 성공으로 처리
-      console.warn('로그아웃 에러 (무시됨):', error)
-      return { success: true }
+      // 에러 무시하고 계속 진행
+      console.log('로그아웃 API 에러 무시:', error.message)
     }
+
+    // 로컬 스토리지에서 Supabase 세션 수동 삭제
+    try {
+      const keys = Object.keys(localStorage)
+      keys.forEach(key => {
+        if (key.startsWith('sb-') || key.includes('supabase')) {
+          localStorage.removeItem(key)
+        }
+      })
+    } catch (storageError) {
+      console.log('로컬 스토리지 정리 에러:', storageError)
+    }
+
+    // 상태 즉시 업데이트
+    setUser(null)
+
+    return { success: true }
   }
 
   // 이메일에서 아이디 추출
