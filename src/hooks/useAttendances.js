@@ -58,11 +58,12 @@ export function useAttendances() {
         return { success: false, error: '유효하지 않은 이벤트이거나 비활성화된 이벤트입니다.' }
       }
 
-      // 2. 사용자 확인
+      // 2. 사용자 확인 (해당 이벤트의 사용자만)
       const { data: user, error: userError } = await supabase
         .from('users')
         .select('*')
         .eq('name', userName.trim())
+        .eq('event_id', eventId)
         .single()
 
       if (userError || !user) {

@@ -6,7 +6,10 @@
       "Bash(npm install:*)",
       "Bash(git init:*)",
       "Bash(git remote add:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nInitial commit: 출석 체크 웹 애플리케이션\n\n- React + Vite + Supabase 기반 출석 관리 시스템\n- 관리자 페이지: QR 코드 관리, 회원 관리, 출석 기록\n- 사용자 페이지: QR 코드 스캔 출석 체크\n- 토스트 알림 시스템\n- 엑셀 내보내기 \\(년도별 시트, 월/일 헤더\\)\n- 모바일 반응형 디자인\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push:*)",
+      "Bash(git commit:*)"
     ]
   }
 }

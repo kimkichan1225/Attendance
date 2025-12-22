@@ -3,15 +3,38 @@ import { useUsers } from '../../hooks/useUsers'
 import { useToast } from '../../contexts/ToastContext'
 import { supabase } from '../../lib/supabase'
 
-function UserManagement() {
+function UserManagement({ userId }) {
   const toast = useToast()
-  const { users, loading, addUser, deleteUser } = useUsers()
+  const [eventId, setEventId] = useState(null)
+  const { users, loading, addUser, deleteUser } = useUsers(eventId)
   const [newUserName, setNewUserName] = useState('')
   const [adding, setAdding] = useState(false)
   const [attendanceCounts, setAttendanceCounts] = useState({})
   const [selectedUser, setSelectedUser] = useState(null)
   const [userAttendances, setUserAttendances] = useState([])
   const [showModal, setShowModal] = useState(false)
+
+  // 이벤트 ID 가져오기
+  useEffect(() => {
+    const loadEvent = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('events')
+          .select('id')
+          .eq('admin_user_id', userId)
+          .single()
+
+        if (error) throw error
+        setEventId(data.id)
+      } catch (error) {
+        toast.error('이벤트 정보를 불러올 수 없습니다.')
+      }
+    }
+
+    if (userId) {
+      loadEvent()
+    }
+  }, [userId])
 
   useEffect(() => {
     if (users.length > 0) {

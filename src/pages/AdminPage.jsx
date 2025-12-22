@@ -274,7 +274,7 @@ function AdminPage() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         {activeTab === 'qrcode' && <QRCodeManagement userId={user.id} />}
         {activeTab === 'attendance' && <AttendanceRecords userId={user.id} />}
-        {activeTab === 'users' && <UserManagement />}
+        {activeTab === 'users' && <UserManagement userId={user.id} />}
       </div>
     </div>
   )
