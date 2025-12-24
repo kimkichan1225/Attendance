@@ -22,6 +22,11 @@ function CheckInPage() {
   useEffect(() => {
     if (eventId) {
       loadEvent()
+      // 저장된 이름 불러오기
+      const savedName = localStorage.getItem(`checkin_name_${eventId}`)
+      if (savedName) {
+        setUserName(savedName)
+      }
     }
   }, [eventId])
 
@@ -57,13 +62,18 @@ function CheckInPage() {
     setLoading(false)
 
     if (result.success) {
+      // 이름을 로컬 스토리지에 저장
+      localStorage.setItem(`checkin_name_${eventId}`, userName.trim())
+
       setSuccess(true)
+      const checkedInName = userName
       setUserName('')
       setSuggestions([])
 
-      // 3초 후 성공 메시지 숨기기
+      // 3초 후 성공 메시지 숨기기 및 이름 다시 채우기
       setTimeout(() => {
         setSuccess(false)
+        setUserName(checkedInName)
       }, 3000)
     } else {
       setError(result.error)
