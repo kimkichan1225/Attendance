@@ -154,10 +154,11 @@ function AttendanceRecords({ userId }) {
     }
 
     try {
-      // 모든 사용자 가져오기
+      // 해당 모임의 모든 사용자 가져오기
       const { data: allUsers, error: usersError } = await supabase
         .from('users')
         .select('*')
+        .eq('event_id', event.id)
         .order('name')
 
       if (usersError) throw usersError
