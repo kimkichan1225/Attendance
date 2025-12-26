@@ -35,6 +35,26 @@ function AttendanceRecords({ userId }) {
     }
   }, [event, selectedDate])
 
+  // users 변경 시 미출석자 목록 업데이트
+  useEffect(() => {
+    if (event && users.length > 0) {
+      loadAbsentUsers()
+    }
+  }, [users])
+
+  // 자동으로 오늘 날짜로 업데이트
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const today = new Date().toISOString().split('T')[0]
+      if (selectedDate !== today) {
+        console.log('날짜 자동 업데이트:', today)
+        setSelectedDate(today)
+      }
+    }, 60000) // 1분마다 체크
+
+    return () => clearInterval(interval)
+  }, [selectedDate])
+
   // 실시간 업데이트 구독
   useEffect(() => {
     if (!event) return
@@ -47,7 +67,6 @@ function AttendanceRecords({ userId }) {
         () => {
           console.log('회원 데이터 변경 감지')
           refreshUsers()
-          loadAbsentUsers()
         }
       )
       .subscribe()
