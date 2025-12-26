@@ -114,7 +114,20 @@ function AttendanceRecords({ userId }) {
 
   const loadAbsentUsers = async () => {
     if (!event) return
-    const result = await getTodayAbsentUsers(event.id, users)
+
+    // 최신 users 데이터를 직접 조회하여 사용
+    const { data: currentUsers, error: usersError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('event_id', event.id)
+      .order('name')
+
+    if (usersError) {
+      console.error('회원 조회 실패:', usersError)
+      return
+    }
+
+    const result = await getTodayAbsentUsers(event.id, currentUsers || [])
     if (result.success) {
       setAbsentUsers(result.data)
     }
@@ -173,6 +186,8 @@ function AttendanceRecords({ userId }) {
     }
 
     try {
+      toast.info('엑셀 파일을 생성하는 중...')
+
       // 해당 모임의 모든 사용자 가져오기
       const { data: allUsers, error: usersError } = await supabase
         .from('users')
@@ -181,10 +196,9 @@ function AttendanceRecords({ userId }) {
         .order('name')
 
       if (usersError) throw usersError
-      if (!allUsers || allUsers.length === 0) {
-        toast.warning('등록된 사용자가 없습니다.')
-        return
-      }
+
+      // 사용자가 없어도 빈 엑셀 파일 생성
+      const usersList = allUsers || []
 
       // 모든 출석 기록 가져오기
       const { data: allAttendances, error } = await supabase
@@ -225,7 +239,7 @@ function AttendanceRecords({ userId }) {
       const years = Object.keys(yearMap).length > 0 ? Object.keys(yearMap).sort() : [new Date().getFullYear().toString()]
 
       // 모든 사용자 이름 목록 (정렬)
-      const allUserNames = allUsers.map(u => u.name).sort()
+      const allUserNames = usersList.length > 0 ? usersList.map(u => u.name).sort() : []
 
       // 각 년도별로 시트 생성
       years.forEach(year => {
