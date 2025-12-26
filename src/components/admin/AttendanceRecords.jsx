@@ -328,7 +328,6 @@ function AttendanceRecords({ userId }) {
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
             <button
               onClick={exportToExcel}
-              disabled={attendances.length === 0}
               className="px-4 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700 disabled:bg-gray-300 whitespace-nowrap"
             >
               📊 엑셀 내보내기
