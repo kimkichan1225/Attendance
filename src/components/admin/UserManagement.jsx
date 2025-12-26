@@ -43,10 +43,13 @@ function UserManagement({ userId }) {
   }, [users])
 
   const loadAttendanceCounts = async () => {
+    if (!eventId) return
+
     try {
       const { data, error } = await supabase
         .from('attendances')
         .select('user_id')
+        .eq('event_id', eventId)
 
       if (error) throw error
 
